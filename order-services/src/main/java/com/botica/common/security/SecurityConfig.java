@@ -22,7 +22,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/orders/**", "/products/**").hasAnyRole("VENDEDOR", "ADMIN")
+                        .requestMatchers("/orders/**").hasAnyRole("VENDEDOR", "ADMIN")
                         .anyRequest().authenticated())
                 .exceptionHandling(e -> e
                         .authenticationEntryPoint(errorHandler)

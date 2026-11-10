@@ -1,5 +1,7 @@
 package com.botica.auth.infrastructure.security;
 
+import com.botica.auth.domain.model.AuthenticatedUser;
+import com.botica.auth.domain.model.Role;
 import com.botica.auth.domain.model.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -10,40 +12,60 @@ import java.util.List;
 
 public class SecurityUser implements UserDetails {
 
-    private final User user;
+    private final Long id;
+    private final String email;
+    private final String password;
+    private final Role role;
 
-    public SecurityUser(User user) {
-        this.user = user;
+    public SecurityUser(Long id, String email, String password, Role role) {
+        this.id = id;
+        this.email = email;
+        this.password = password;
+        this.role = role;
     }
 
-    public User getUser() {
-        return user;
+    // mappers
+    public static SecurityUser toSecurityUserFromDomain(User user) {
+        return new SecurityUser(user.getId(), user.getEmail(), user.getPassword(), user.getRole());
+    }
+
+    public AuthenticatedUser toAuthenticatedUser() {
+        return new AuthenticatedUser(id, role);
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
     @Override
     public String getPassword() {
-        return user.getPasswordHash();
+        return password;
     }
 
     @Override
     public String getUsername() {
-        return user.getEmail();
+        return email;
     }
 
     @Override
-    public boolean isAccountNonExpired() { return true; }
+    public boolean isAccountNonExpired() {
+        return true;
+    }
 
     @Override
-    public boolean isAccountNonLocked() { return true; }
+    public boolean isAccountNonLocked() {
+        return true;
+    }
 
     @Override
-    public boolean isCredentialsNonExpired() { return true; }
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
 
     @Override
-    public boolean isEnabled() { return true; }
+    public boolean isEnabled() {
+        return true;
+    }
+
 }

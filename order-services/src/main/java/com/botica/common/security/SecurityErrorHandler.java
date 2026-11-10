@@ -2,7 +2,6 @@ package com.botica.common.security;
 
 import com.botica.common.web.dto.ErrorResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
@@ -28,7 +27,7 @@ public class SecurityErrorHandler implements AuthenticationEntryPoint, AccessDen
     // 401: we don't know who you are (no token, invalid or expired token)
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
-                         AuthenticationException ex) throws IOException, ServletException {
+                         AuthenticationException ex) throws IOException {
         writeErrorResponse(response, HttpStatus.UNAUTHORIZED, "No autenticado: Debe iniciar sesión o enviar un token válido");
     }
 

@@ -2,6 +2,8 @@ package com.botica.order.application.service;
 
 import com.botica.order.application.port.in.OrderUseCase;
 import com.botica.order.application.port.out.OrderRepositoryPort;
+import com.botica.order.application.port.out.UserLookupPort;
+import com.botica.order.domain.exception.InvalidOrderException;
 import com.botica.order.domain.exception.OrderNotFoundException;
 import com.botica.order.domain.model.Order;
 import com.botica.order.domain.model.PaymentType;
@@ -19,14 +21,20 @@ public class OrderService implements OrderUseCase {
 
     private final OrderRepositoryPort orderRepository;
     private final PaymentStrategyFactory paymentStrategyFactory;
+    private final UserLookupPort userLookup;
 
-    public OrderService(OrderRepositoryPort orderRepository, PaymentStrategyFactory paymentStrategyFactory) {
+    public OrderService(OrderRepositoryPort orderRepository, PaymentStrategyFactory paymentStrategyFactory, UserLookupPort userLookup) {
         this.orderRepository = orderRepository;
         this.paymentStrategyFactory = paymentStrategyFactory;
+        this.userLookup = userLookup;
     }
 
     @Override
     public Order create(Long customerId, BigDecimal total, PaymentType paymentType, Requester requester) {
+
+        userLookup.findById(customerId)
+                .orElseThrow(() -> new InvalidOrderException("User with id " + customerId + " does not exist"));
+
         Order order = Order.create(customerId, total, paymentType);
         Order savedOrder = orderRepository.save(order);
 

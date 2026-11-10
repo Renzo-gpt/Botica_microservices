@@ -1,38 +1,40 @@
 package com.botica.auth.infrastructure.web;
 
-import com.botica.auth.application.port.out.PasswordHasherPort;
-import com.botica.auth.application.port.out.UserRepositoryPort;
-import com.botica.auth.domain.exception.EmailAlreadyUsedException;
-import com.botica.auth.domain.model.User;
-import com.botica.auth.infrastructure.web.dto.RegisterUserRequest;
-import com.botica.auth.infrastructure.web.dto.UserResponse;
-import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import com.botica.auth.application.port.in.GetUserSummaryUseCase;
+import com.botica.auth.application.port.in.ListUsersUseCase;
+import com.botica.auth.domain.model.UserSummary;
+import com.botica.auth.infrastructure.web.dto.UserSummaryResponse;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/users")
 public class UserController {
 
-    private final UserRepositoryPort userRepository;
-    private final PasswordHasherPort passwordHasher;
+    private final GetUserSummaryUseCase getUserSummary;
+    private final ListUsersUseCase listUsers;
 
-    public UserController(UserRepositoryPort userRepository, PasswordHasherPort passwordHasher) {
-        this.userRepository = userRepository;
-        this.passwordHasher = passwordHasher;
+    public UserController(GetUserSummaryUseCase getUserSummary, ListUsersUseCase listUsers) {
+        this.getUserSummary = getUserSummary;
+        this.listUsers = listUsers;
     }
 
-    @PostMapping
-    public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterUserRequest request) {
-        if (userRepository.existsByEmail(request.email())) {
-            throw new EmailAlreadyUsedException("El email ya se encuentra registrado");
-        }
+    // Anyone may look up themselves; only an ADMIN may look up other users.
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.userId")
+    public UserSummaryResponse get(@PathVariable Long id) {
+        return UserSummaryResponse.from(getUserSummary.getSummary(id));
+    }
 
-        String hashedPassword = passwordHasher.hash(request.password());
-        User newUser = User.create(request.email(), hashedPassword, request.role());
-        User savedUser = userRepository.save(newUser);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(UserResponse.fromDomain(savedUser));
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<UserSummaryResponse> listAll() {
+        return listUsers.listUsers()
+                .stream()
+                .map(UserSummary::from)
+                .map(UserSummaryResponse::from)
+                .toList();
     }
 }

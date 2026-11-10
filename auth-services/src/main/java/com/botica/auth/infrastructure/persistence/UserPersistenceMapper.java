@@ -13,6 +13,6 @@ public class UserPersistenceMapper {
 
     public UserEntity toEntity(User domain) {
         if (domain == null) return null;
-        return new UserEntity(domain.getId(), domain.getEmail(), domain.getPasswordHash(), domain.getRole());
+        return new UserEntity(domain.getId(), domain.getEmail(), domain.getPassword(), domain.getRole());
     }
 }
